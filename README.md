@@ -1,5 +1,5 @@
 # Python_Photo_Editor
-파이썬으로 제작한 GUI 이미지 편집기 프로그램입니다.
+Python 3으로 제작한 GUI 이미지 편집기 프로그램입니다.
 
 
 GUI는 파이썬의 기본 내장 함수인 tkinter로 구현하였습니다.
