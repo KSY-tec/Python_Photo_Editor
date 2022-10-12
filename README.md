@@ -1,4 +1,6 @@
 # Python_Photo_Editor
+![image](./main_capture.PNG)
+
 Python 3으로 제작한 GUI 이미지 편집기 프로그램입니다.
 
 
