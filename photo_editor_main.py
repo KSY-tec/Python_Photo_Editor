@@ -86,7 +86,7 @@ class Img_edit():
             self.displayImage()
 
             return
-
+        self.src_before.clear()
         self.displayImage()
 
     # 파일 저장
