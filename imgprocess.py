@@ -1,3 +1,5 @@
+from cmath import sqrt
+
 import numpy as np
 import cv2
 import math
@@ -293,8 +295,9 @@ class Img_pross:
         return copy_img
 
     # 이미지 채널 조정 기능
-    def img_ctrl_chan(_src,_height, _width,_channel,_blue,_green,_red):
+    def img_ctrl_chan(self,_src,_height, _width,_channel,_blue,_green,_red):
         copy_img=np.zeros(shape=(_height, _width,_channel), dtype=np.uint8)
+        copy_img=self.img_RGBtoHSV(self,_src,_height, _width,_channel)
         for y in range(0, _height):
             for x in range(0, _width):
                 if _blue<0:
@@ -309,4 +312,130 @@ class Img_pross:
                     copy_img[y][x][2] = _src[y][x][2]*(_red*0.1*-1)
                 else:
                     copy_img[y][x][2] = _src[y][x][2]*(1+_red*0.1)
+
+        copy_img=self.img_HSVtoRGB(self,_src,_height, _width,_channel)
         return copy_img
+
+    def HSV_means(_src,height,width):
+        bs=[]
+        gs=[]
+        rs=[]
+
+        for y in range(height):
+            for x in range(width):
+
+                bs+=[_src[y][x][0]]
+                gs+=[_src[y][x][1]]
+                rs+=[_src[y][x][2]]
+
+        H=np.mean(bs)
+        S=np.mean(gs)
+        V=np.mean(rs)
+
+        return (H,S,V)
+
+    def img_chan(self,_src,_height, _width,_channel,ch,cs,cv):
+        copy_img=np.zeros(shape=(_height, _width,_channel), dtype=np.uint8)
+        for y in range(0, _height):
+            for x in range(0, _width):
+                HSV=[None,None,None]
+                HSV[0]=self.RGBtoHSV(_src[y][x][0],_src[y][x][1],_src[y][x][2])[0]
+                HSV[1]=self.RGBtoHSV(_src[y][x][0],_src[y][x][1],_src[y][x][2])[1]
+                HSV[2]=self.RGBtoHSV(_src[y][x][0],_src[y][x][1],_src[y][x][2])[2]
+                HSV[0]=HSV[0]+ch
+                HSV[1]=HSV[1]+cs
+                HSV[2]=HSV[2]+cv
+
+                if HSV[0]>360:
+                    HSV[0]=360
+                elif HSV[0]<0:
+                    while HSV[0]<0:
+                        HSV[0]+=360
+
+                if HSV[1]<0:
+                    HSV[1]=0
+                if HSV[1]>1:
+                    HSV[1]=1
+
+                if HSV[2]<0:
+                    HSV[2]=0
+                if HSV[2]>1:
+                    HSV[2]=1
+
+
+                try:
+                    copy_img[y][x][0] = self.HSVtoRGB(HSV[0],HSV[1],HSV[2])[0]
+                    copy_img[y][x][1] = self.HSVtoRGB(HSV[0],HSV[1],HSV[2])[1]
+                    copy_img[y][x][2] = self.HSVtoRGB(HSV[0],HSV[1],HSV[2])[2]
+                except:
+                    if _src[y][x][0]==255:
+                        copy_img[y][x][0] = 255
+
+                    if _src[y][x][1]==255:
+                        copy_img[y][x][1] = 255
+                    
+                    if _src[y][x][2]==255:
+                        copy_img[y][x][2] = 255
+
+                    if _src[y][x][0]==0:
+                        copy_img[y][x][0] = 0
+
+                    if _src[y][x][1]==0:
+                        copy_img[y][x][1] = 0
+
+                    if _src[y][x][2]==0:
+                        copy_img[y][x][2] = 0
+
+        return copy_img
+        
+
+    def RGBtoHSV(_blue,_green,_red):
+        _blue=_blue/255
+        _green=_green/255
+        _red=_red/255
+
+        _V=max(_blue,_green,_red)
+
+        if _V==0:
+            _S=0
+        else:
+            _S=(_V-min(_blue,_green,_red))/_V
+
+        
+        if _V==_red:
+            _H=(60*(_green-_blue))/(_V-min(_blue,_green,_red))
+        elif _V==_green:
+            _H=120+60*(_blue-_red)/(_V-min(_blue,_green,_red))
+        elif _V==_blue:
+            _H=240+60*(_red-_green)/(_V-min(_blue,_green,_red))
+        
+        if _H<0:
+            _H=_H+360
+        
+        return (_H,_S,_V)
+
+    
+
+    def HSVtoRGB(H,S,V):
+        C=V*S
+        X=C*(1-abs(H/60%2-1))
+        m=V-C
+
+        if 0<=H and H<60:
+            RGB=(C,X,0)
+        elif 60<=H and H<120:
+            RGB=(X,C,0)
+        elif 120<= H and H<180:
+            RGB=(0,C,X)
+        elif 180<=H and H<240:
+            RGB=(0,X,C)
+        elif 240<=H and H<300:
+            RGB=(X,0,C)
+        elif 300<=H and H<360:
+            RGB=(C,0,X)
+        
+        result=((RGB[0]+m)*255,(RGB[1]+m)*255,(RGB[2]+m)*255)
+        return (int(result[2]),int(result[1]),int(result[0]))
+
+
+

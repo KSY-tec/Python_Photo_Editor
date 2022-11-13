@@ -1,4 +1,5 @@
 #GUI 관련
+
 from tkinter import *
 from tkinter import messagebox
 from tkinter import colorchooser
@@ -6,6 +7,7 @@ from tkinter import simpledialog
 from tkinter.filedialog import *
 from tkinter.simpledialog import *
 from PIL import Image, ImageTk
+
 
 #이미지 처리 관련 외부 라이브러리 불러오기
 import cv2
@@ -85,6 +87,7 @@ class Img_edit():
             self.height, self.width, self.channel = self.src.shape
             self.displayImage()
 
+            self.src_orig=self.src.copy()
             return
         self.src_before.clear()
         self.displayImage()
@@ -309,6 +312,7 @@ class Img_edit():
     # 작업 초기화
     def clean_all(self):
         self.src=self.src_orig
+        self.src_before.clear()
         self.height, self.width, self.channel = self.src.shape
         self.displayImage()
 
@@ -418,50 +422,47 @@ class Img_edit():
         self.src=copy_img
         self.displayImage()
 
-    #채널조정
-    def ctrl_chan(self):
-        # self.work_save()
-        ctrl_chan_gui=Toplevel(self.window)
+    #색조, 채도, 명도 조정
+    def ctrl_HSV(self):
+        global HSV,H,S,V
+        ctrl_hsv_gui=Toplevel(self.window)
 
+        Label(ctrl_hsv_gui,text="색조").grid(column=0, row=0)
+        Label(ctrl_hsv_gui,text="채도").grid(column=0, row=1)
+        Label(ctrl_hsv_gui,text="명도").grid(column=0, row=2)
 
-        # def works(event):
-        #     copy_img=Img_pross.img_ctrl_chan(self.src, self.height, self.width, self.channel, blue_bar.get(), green_bar.get(),red_bar.get() )
-        #     self.src=copy_img
-        #     self.displayImage()
-
-        Label(ctrl_chan_gui,text="Red").grid(column=0, row=0)
-        Label(ctrl_chan_gui,text="Green").grid(column=0, row=1)
-        Label(ctrl_chan_gui,text="Blue").grid(column=0, row=2)
-
-        red_bar=Scale(ctrl_chan_gui,showvalue=True,from_=-10, to=10,\
+        H=Scale(ctrl_hsv_gui,showvalue=True,from_=0, to=360,\
             resolution=1,orient="horizontal")
-        green_bar=Scale(ctrl_chan_gui,showvalue=True,from_=-10, to=10,\
+        S=Scale(ctrl_hsv_gui,showvalue=True,from_=0, to=255,\
             resolution=1,orient="horizontal")
-        blue_bar=Scale(ctrl_chan_gui,showvalue=True,from_=-10, to=10,\
+        V=Scale(ctrl_hsv_gui,showvalue=True,from_=-0, to=255,\
             resolution=1,orient="horizontal")
-        # red_bar=Scale(ctrl_chan_gui,showvalue=True, to=10,\
-        #     resolution=1,command=works,orient="horizontal")
-        # green_bar=Scale(ctrl_chan_gui,showvalue=True, to=10,\
-        #     resolution=1,command=works,orient="horizontal")
-        # blue_bar=Scale(ctrl_chan_gui,showvalue=True, to=10,\
-        #     resolution=1,command=works,orient="horizontal")
 
-        red_bar.grid(column=1, row=0)
-        green_bar.grid(column=1, row=1)
-        blue_bar.grid(column=1, row=2)
+        HSV=Img_pross.HSV_means(self.src,self.height, self.width)
+        
+        H.grid(column=1, row=0)
+        S.grid(column=1, row=1)
+        V.grid(column=1, row=2)
 
+        H.set(HSV[0])
+        S.set(HSV[1])
+        V.set(HSV[2])
 
-        def chan_ok():
+        def hsv_ok():
+            global HSV,H,S,V
             self.work_save()
-            copy_img=Img_pross.img_ctrl_chan(self.src, self.height, self.width, self.channel, blue_bar.get(), green_bar.get(),red_bar.get() )
+            ch=H.get()-HSV[0]
+            cs=(S.get()-HSV[1])/255
+            cv=(V.get()-HSV[2])/255
+            copy_img=Img_pross.img_chan(Img_pross,self.src,self.height,self.width,self.channel,ch,cs,cv)
             self.src=copy_img
-            ctrl_chan_gui.withdraw()
+            ctrl_hsv_gui.withdraw()
             self.displayImage()
             
-        chan_ok_button=Button(ctrl_chan_gui,text="확인", command=chan_ok)
-        chan_ok_button.grid(column=1, row=3, columnspan=2)
+        hsv_ok_button=Button(ctrl_hsv_gui,text="확인", command=hsv_ok)
+        hsv_ok_button.grid(column=1, row=3, columnspan=2)
 
-        ctrl_chan_gui.mainloop()
+        ctrl_hsv_gui.mainloop()
         self.work_cancel()
 
 # GUI 구현 및 실행
@@ -510,7 +511,7 @@ image1Menu.add_command(label='그레이스케일', command=play.func_grey)
 image1Menu.add_command(label='흑백', command=play.func_bw)
 image1Menu.add_separator()
 image1Menu.add_command(label='히스토그램 평활화', command=play.smooting)
-image1Menu.add_command(label='채널 조정', command=play.ctrl_chan)
+image1Menu.add_command(label='색조, 채도, 명도 조정', command=play.ctrl_HSV)
 
 #왼쪽 사이드 메뉴
 
